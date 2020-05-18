@@ -156,17 +156,27 @@ class World(object):
 
     # integrate physical state
     def integrate_state(self, p_force):
-        for i,entity in enumerate(self.entities):
-            if not entity.movable: continue
+        for i, entity in enumerate(self.entities):
+            if not entity.movable:
+                continue
             entity.state.p_vel = entity.state.p_vel * (1 - self.damping)
-            if (p_force[i] is not None):
+            if p_force[i] is not None:
                 entity.state.p_vel += (p_force[i] / entity.mass) * self.dt
             if entity.max_speed is not None:
                 speed = np.sqrt(np.square(entity.state.p_vel[0]) + np.square(entity.state.p_vel[1]))
                 if speed > entity.max_speed:
-                    entity.state.p_vel = entity.state.p_vel / np.sqrt(np.square(entity.state.p_vel[0]) +
-                                                                  np.square(entity.state.p_vel[1])) * entity.max_speed
+                    entity.state.p_vel = (entity.state.p_vel / np.sqrt(
+                        np.square(entity.state.p_vel[0]) + np.square(entity.state.p_vel[1])
+                    ) * entity.max_speed)
             entity.state.p_pos += entity.state.p_vel * self.dt
+            # TODO: more elegant way to bound the state ?
+            for j in range(2):
+                if entity.state.p_pos[j] > 1.:
+                    entity.state.p_pos[j] = 1.
+                    entity.state.p_vel[j] = 0.
+                if entity.state.p_pos[j] < -1:
+                    entity.state.p_pos[j] = -1.
+                    entity.state.p_vel[j] = 0.
 
     def update_agent_state(self, agent):
         # set communication state (directly for now)
